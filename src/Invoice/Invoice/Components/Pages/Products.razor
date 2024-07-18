@@ -1,0 +1,190 @@
+﻿@page "/products"
+
+<h3>@(isEditMode ? "Edit Product" : "Add Product")</h3>
+
+<form @onsubmit="HandleSubmit">
+   
+    <div class="form-group mt-3">
+        <label for="Name">Product Name:</label>
+        <input type="text" class="form-control" id="Name" @bind="Name">
+    </div>
+    <div class="form-group mt-3">
+        <label for="Price">Price:</label>
+        <input type="number" class="form-control" id="Price" @bind="Price">
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-4 me-2">@((isEditMode ? "Save" : "Add"))</button>
+    @if (isEditMode)
+    {
+        <button type="button" class="btn btn-secondary mt-4" @onclick="CancelEdit">Cancel</button>
+    }
+</form>
+
+<hr />
+
+<h3>Product List</h3>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (ProductList != null && ProductList.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Serial</th>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @{
+                var serialNumber = 1;
+            }
+
+            @foreach (var product in ProductList)
+            {
+                <tr>
+                    <td>@serialNumber</td>
+                    <td>@product.Id</td>
+                    <td>@product.Name</td>
+                    <td>@product.Price</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => EditProduct(product)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => DeleteProduct(product)">Delete</button>
+                    </td>
+                </tr>
+                serialNumber++;
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No products added yet.</p>
+}
+
+@code {
+
+    [Inject]
+    public InvoiceDbContext dbContext { get; set; }
+
+    [Inject]
+    private IJSRuntime JS { get; set; }
+
+    private string errorMessage;
+
+    private string Name;
+    private double Price;
+
+    private List<Product> ProductList;
+
+
+
+    private bool isEditMode = false;
+    private Product editingProduct;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ProductList = await dbContext.GetList<Product>();
+    }
+
+    private async Task HandleSubmit()
+    {
+        errorMessage = string.Empty;
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(Name))
+            {
+                if (isEditMode)
+                {
+                    editingProduct.Name = Name;
+                    editingProduct.Price = Price;
+
+                    await dbContext.Update(editingProduct);
+                    isEditMode = false;
+                }
+                else
+                {
+                    var newProduct = new Product
+                        {
+                            Name = Name,
+                            Price = Price,
+                        };
+                    await dbContext.Create(newProduct);
+                    ProductList.Add(newProduct);
+                }
+
+                Name = string.Empty;
+                Price = 0;
+
+                // ProductList = await dbContext.GetList<Product>();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"{ex.Message}";
+        }
+    }
+
+    private void EditProduct(Product product)
+    {
+        isEditMode = true;
+        editingProduct = product;
+
+        Name = product.Name;
+        Price = product.Price;
+    }
+   
+
+    private void CancelEdit()
+    {
+        isEditMode = false;
+        editingProduct = null;
+
+        Name = string.Empty;
+        Price = 0;
+
+    }
+
+    // private async Task ConfirmDelete(Product product)
+    // {
+    //     try
+    //     {
+    //         var confirmed = await JS.InvokeAsync<bool>("confirmDelete");
+    //         if (confirmed)
+    //         {
+    //             await DeleteUpazila(upazila);
+    //         }
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         errorMessage = $"{ex.Message}";
+    //     }
+    // }
+
+    private async Task DeleteProduct(Product product)
+    {
+        errorMessage = string.Empty;
+        try
+        {           
+            await dbContext.Delete(product);
+            ProductList.Remove(product);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"{ex.Message}";
+        }
+    }
+}
+
+<script>
+    function confirmDelete() {
+        return confirm("Are you sure you want to delete this Product?");
+    }
+</script>

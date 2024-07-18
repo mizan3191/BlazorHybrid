@@ -1,0 +1,199 @@
+﻿@page "/company"
+
+<h3>@(isEditMode ? "Edit Company" : "Add Company")</h3>
+
+<form @onsubmit="HandleSubmit">
+
+    <div class="form-group mt-3">
+        <label for="Name">Company Name:</label>
+        <input type="text" class="form-control" id="Name" @bind="Name">
+    </div>
+    <div class="form-group mt-3">
+        <label for="Address">Address:</label>
+        <input type="text" class="form-control" id="Address" @bind="Address">
+    </div>
+    <div class="form-group mt-3">
+        <label for="Quote">Quote:</label>
+        <input type="text" class="form-control" id="Quote" @bind="Quote">
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-4 me-2">@((isEditMode ? "Save" : "Add"))</button>
+    @if (isEditMode)
+    {
+        <button type="button" class="btn btn-secondary mt-4" @onclick="CancelEdit">Cancel</button>
+    }
+</form>
+
+<hr />
+
+<h3>Company List</h3>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (CompanyList != null && CompanyList.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Serial</th>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Quote</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @{
+                var serialNumber = 1;
+            }
+
+            @foreach (var company in CompanyList)
+            {
+                <tr>
+                    <td>@serialNumber</td>
+                    <td>@company.Id</td>
+                    <td>@company.Name</td>
+                    <td>@company.Address</td>
+                    <td>@company.Quote</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => EditCompany(company)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => DeleteCompany(company)">Delete</button>
+                    </td>
+                </tr>
+                serialNumber++;
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No Companys added yet.</p>
+}
+
+@code {
+
+    [Inject]
+    public InvoiceDbContext dbContext { get; set; }
+
+    [Inject]
+    private IJSRuntime JS { get; set; }
+
+    private string errorMessage;
+
+    private string Name;
+    private string Address;
+    private string Quote;
+
+    private List<Company> CompanyList;
+
+
+
+    private bool isEditMode = false;
+    private Company editingCompany;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CompanyList = await dbContext.GetList<Company>();
+    }
+
+    private async Task HandleSubmit()
+    {
+        errorMessage = string.Empty;
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(Name))
+            {
+                if (isEditMode)
+                {
+                    editingCompany.Name = Name;
+                    editingCompany.Name = Name;
+                    editingCompany.Address = Address;
+                    editingCompany.Quote = Quote;
+
+                    await dbContext.Update(editingCompany);
+                    isEditMode = false;
+                }
+                else
+                {
+                    var newCompany = new Company
+                        {
+                            Name = Name,
+                            Address = Address,
+                            Quote = Quote,
+                        };
+
+                    await dbContext.Create(newCompany);
+                    CompanyList.Add(newCompany);
+                }
+
+                Name = string.Empty;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"{ex.Message}";
+        }
+    }
+
+    private void EditCompany(Company Company)
+    {
+        isEditMode = true;
+        editingCompany = Company;
+
+        Name = Company.Name;
+        Address = Company.Address;
+        Quote = Company.Quote;
+    }
+
+
+    private void CancelEdit()
+    {
+        isEditMode = false;
+        editingCompany = null;
+
+        Name = string.Empty;
+        Address = string.Empty;
+        Quote = string.Empty;
+    }
+
+    // private async Task ConfirmDelete(Company Company)
+    // {
+    //     try
+    //     {
+    //         var confirmed = await JS.InvokeAsync<bool>("confirmDelete");
+    //         if (confirmed)
+    //         {
+    //             await DeleteUpazila(upazila);
+    //         }
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         errorMessage = $"{ex.Message}";
+    //     }
+    // }
+
+    private async Task DeleteCompany(Company Company)
+    {
+        errorMessage = string.Empty;
+        try
+        {
+            await dbContext.Delete(Company);
+            CompanyList.Remove(Company);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"{ex.Message}";
+        }
+    }
+}
+
+<script>
+    function confirmDelete() {
+        return confirm("Are you sure you want to delete this Company?");
+    }
+</script>

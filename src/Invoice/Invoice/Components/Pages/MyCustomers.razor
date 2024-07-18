@@ -1,0 +1,201 @@
+﻿@page "/customers"
+
+<h3>@(isEditMode ? "Edit Customer" : "Add Customer")</h3>
+
+<form @onsubmit="HandleSubmit">
+   
+    <div class="form-group mt-3">
+        <label for="Name">Customer Name:</label>
+        <input type="text" class="form-control" id="Name" @bind="Name">
+    </div>
+    <div class="form-group mt-3">
+        <label for="Address">Address:</label>
+        <input type="" class="form-control" id="Address" @bind="Address">
+    </div>
+    <div class="form-group mt-3">
+        <label for="Phone">Phone:</label>
+        <input type="text" class="form-control" id="Phone" @bind="Phone">
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-4 me-2">@((isEditMode ? "Save" : "Add"))</button>
+    @if (isEditMode)
+    {
+        <button type="button" class="btn btn-secondary mt-4" @onclick="CancelEdit">Cancel</button>
+    }
+</form>
+
+<hr />
+
+<h3>Customer List</h3>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (CustomerList != null && CustomerList.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Serial</th>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Phone</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @{
+                var serialNumber = 1;
+            }
+
+            @foreach (var Customer in CustomerList)
+            {
+                <tr>
+                    <td>@serialNumber</td>
+                    <td>@Customer.Id</td>
+                    <td>@Customer.Name</td>
+                    <td>@Customer.Address</td>
+                    <td>@Customer.Phone</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => EditCustomer(Customer)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => DeleteCustomer(Customer)">Delete</button>
+                    </td>
+                </tr>
+                serialNumber++;
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No Customers added yet.</p>
+}
+
+@code {
+
+    [Inject]
+    public InvoiceDbContext dbContext { get; set; }
+
+    [Inject]
+    private IJSRuntime JS { get; set; }
+
+    private string errorMessage;
+
+    private string Name;
+    private string Phone;
+    private string Address;
+
+    private List<Customer> CustomerList;
+
+
+
+    private bool isEditMode = false;
+    private Customer editingCustomer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CustomerList = await dbContext.GetList<Customer>();
+    }
+
+    private async Task HandleSubmit()
+    {
+        errorMessage = string.Empty;
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(Name))
+            {
+                if (isEditMode)
+                {
+                    editingCustomer.Name = Name;
+                    editingCustomer.Phone = Phone;
+                    editingCustomer.Address = Address;
+
+                    await dbContext.Update(editingCustomer);
+                    isEditMode = false;
+                }
+                else
+                {
+                    var newCustomer = new Customer
+                        {
+                            Name = Name,
+                            Address = Address,
+                            Phone = Phone,
+                        };
+                    await dbContext.Create(newCustomer);
+                    CustomerList.Add(newCustomer);
+                }
+
+                Name = string.Empty;
+                Address = string.Empty;
+                Phone = string.Empty;
+
+                // CustomerList = await dbContext.GetList<Customer>();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"{ex.Message}";
+        }
+    }
+
+    private void EditCustomer(Customer Customer)
+    {
+        isEditMode = true;
+        editingCustomer = Customer;
+
+        Name = Customer.Name;
+        Address = Customer.Address;
+        Phone = Customer.Phone;
+    }
+   
+
+    private void CancelEdit()
+    {
+        isEditMode = false;
+        editingCustomer = null;
+
+        Name = string.Empty;
+        Address = string.Empty;
+        Phone = string.Empty;
+    }
+
+    // private async Task ConfirmDelete(Customer Customer)
+    // {
+    //     try
+    //     {
+    //         var confirmed = await JS.InvokeAsync<bool>("confirmDelete");
+    //         if (confirmed)
+    //         {
+    //             await DeleteUpazila(upazila);
+    //         }
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         errorMessage = $"{ex.Message}";
+    //     }
+    // }
+
+    private async Task DeleteCustomer(Customer Customer)
+    {
+        errorMessage = string.Empty;
+        try
+        {           
+            await dbContext.Delete(Customer);
+            CustomerList.Remove(Customer);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"{ex.Message}";
+        }
+    }
+}
+
+<script>
+    function confirmDelete() {
+        return confirm("Are you sure you want to delete this Customer?");
+    }
+</script>

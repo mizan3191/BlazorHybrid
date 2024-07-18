@@ -1,0 +1,49 @@
+{
+  "Files": [
+    {
+      "Id": "D:\\Reporting Project\\Invoice\\Invoice\\obj\\Debug\\net8.0-android\\scopedcss\\bundle\\Invoice.styles.css",
+      "PackagePath": "staticwebassets\\Invoice.styles.css"
+    },
+    {
+      "Id": "D:\\Reporting Project\\Invoice\\Invoice\\wwwroot\\InvoiceJquery.js",
+      "PackagePath": "staticwebassets\\InvoiceJquery.js"
+    },
+    {
+      "Id": "D:\\Reporting Project\\Invoice\\Invoice\\wwwroot\\css\\app.css",
+      "PackagePath": "staticwebassets\\css\\app.css"
+    },
+    {
+      "Id": "D:\\Reporting Project\\Invoice\\Invoice\\wwwroot\\css\\bootstrap\\bootstrap.min.css",
+      "PackagePath": "staticwebassets\\css\\bootstrap\\bootstrap.min.css"
+    },
+    {
+      "Id": "D:\\Reporting Project\\Invoice\\Invoice\\wwwroot\\css\\bootstrap\\bootstrap.min.css.map",
+      "PackagePath": "staticwebassets\\css\\bootstrap\\bootstrap.min.css.map"
+    },
+    {
+      "Id": "D:\\Reporting Project\\Invoice\\Invoice\\wwwroot\\favicon.png",
+      "PackagePath": "staticwebassets\\favicon.png"
+    },
+    {
+      "Id": "D:\\Reporting Project\\Invoice\\Invoice\\wwwroot\\index.html",
+      "PackagePath": "staticwebassets\\index.html"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0-android\\staticwebassets\\msbuild.Invoice.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0-android\\staticwebassets\\msbuild.build.Invoice.props",
+      "PackagePath": "build\\Invoice.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0-android\\staticwebassets\\msbuild.buildMultiTargeting.Invoice.props",
+      "PackagePath": "buildMultiTargeting\\Invoice.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0-android\\staticwebassets\\msbuild.buildTransitive.Invoice.props",
+      "PackagePath": "buildTransitive\\Invoice.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
